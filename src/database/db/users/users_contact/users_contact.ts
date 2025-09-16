@@ -1,11 +1,11 @@
-import { sqliteAll, sqliteGet, sqliteRun } from "../../db-connection";
+import { sqliteAllUsers, sqliteGetUsers, sqliteRunUsers } from "../../../db-connection";
 
 // TODO функция по отправке запроса в добавление в контакты юзера
 export async function sendUserInviteInContact(userSendInviteLogin: string, userGetInviteLogin: string): Promise<boolean> {
 // выбрать всех из таблицы users_contact
 // у кого login_user равен userGetInviteLogin
     try {
-        const objDataUserGetInviteLogin = await sqliteGet(`
+        const objDataUserGetInviteLogin = await sqliteGetUsers(`
             SELECT * FROM users_contact
             WHERE login_user = ?
         `, [userGetInviteLogin])
@@ -39,7 +39,7 @@ export async function sendUserInviteInContact(userSendInviteLogin: string, userG
             invitesList.push(userSendInviteLogin)
 
             // Обновляем запись
-            await sqliteRun(`
+            await sqliteRunUsers(`
             UPDATE users_contact
             SET login_users_in_invite_list = ?
             WHERE login_user = ?
@@ -55,7 +55,7 @@ export async function sendUserInviteInContact(userSendInviteLogin: string, userG
 // TODO функция удаления пользователя из списка контактов
 export async function removeUserFromContactList(currentUserLogin: string, deleteUserLogin: string): Promise<boolean> {
     try {
-        const objDataCurrentUser = await sqliteGet(`
+        const objDataCurrentUser = await sqliteGetUsers(`
             SELECT * FROM users_contact
             WHERE login_user = ?
         `, [currentUserLogin])
@@ -75,7 +75,7 @@ export async function removeUserFromContactList(currentUserLogin: string, delete
             contactsCurrentUser = contactsCurrentUser.filter((item: string) => item !== deleteUserLogin)
 
             // Обновляем запись
-            await sqliteRun(`
+            await sqliteRunUsers(`
             UPDATE users_contact
             SET login_users_in_contact_list = ?
             WHERE login_user = ?
@@ -83,7 +83,7 @@ export async function removeUserFromContactList(currentUserLogin: string, delete
         }
 
         // удалим контакт текущего пользователя из списка контактов пользователя которого удалили
-        const objDataDeleteUser = await sqliteGet(`
+        const objDataDeleteUser = await sqliteGetUsers(`
             SELECT * FROM users_contact
             WHERE login_user = ?
         `, [deleteUserLogin])
@@ -104,7 +104,7 @@ export async function removeUserFromContactList(currentUserLogin: string, delete
             contactsDeleteUser = contactsDeleteUser.filter((item: string) => item !== currentUserLogin)
 
             // Обновляем запись
-            await sqliteRun(`
+            await sqliteRunUsers(`
             UPDATE users_contact
             SET login_users_in_contact_list = ?
             WHERE login_user = ?
@@ -120,7 +120,7 @@ export async function removeUserFromContactList(currentUserLogin: string, delete
 // TODO функция принятия запроса в контакты
 export async function acceptInvitation(userSendInviteLogin: string, userGetInviteLogin: string): Promise<boolean> {
     try {
-        const objDataUserGetInviteLogin = await sqliteGet(`
+        const objDataUserGetInviteLogin = await sqliteGetUsers(`
             SELECT * FROM users_contact
             WHERE login_user = ?
         `, [userGetInviteLogin])
@@ -153,7 +153,7 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
         if (invitesCurrentUser.includes(userSendInviteLogin)) {
             invitesCurrentUser = invitesCurrentUser.filter((item: string) => item !== userSendInviteLogin)
 
-            await sqliteRun(`
+            await sqliteRunUsers(`
                 UPDATE users_contact
                 SET login_users_in_invite_list  = ?
                 WHERE login_user = ?
@@ -164,7 +164,7 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
         if (!contactsCurrentUser.includes(userSendInviteLogin)) {
             contactsCurrentUser.push(userSendInviteLogin)
 
-            await sqliteRun(`
+            await sqliteRunUsers(`
                 UPDATE users_contact
                 SET login_users_in_contact_list = ?
                 WHERE login_user = ?
@@ -172,7 +172,7 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
         }
 
         // Обновляем запись
-        // await sqliteRun(`
+        // await sqliteRunUsers(`
         //     UPDATE users_contact
         //     SET login_users_in_invite_list  = ?,
         //         login_users_in_contact_list = ?
@@ -181,7 +181,7 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
 
         // обновляем запись для юзера который отправил запрос и его добавили в контакты
         // получаем запись юзера отправившего запрос на добавление текущего юзера в контакты
-        const objDataUserSendInviteLogin = await sqliteGet(`
+        const objDataUserSendInviteLogin = await sqliteGetUsers(`
             SELECT * FROM users_contact
             WHERE login_user = ?
         `, [userSendInviteLogin])
@@ -213,7 +213,7 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
         if (!contactsSendUser.includes(userGetInviteLogin)) {
             contactsSendUser.push(userGetInviteLogin)
 
-            await sqliteRun(`
+            await sqliteRunUsers(`
             UPDATE users_contact
             SET login_users_in_contact_list = ?
             WHERE login_user = ?
@@ -224,7 +224,7 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
         if (invitesSendUser.includes(userGetInviteLogin)) {
             invitesSendUser = invitesSendUser.filter((item: string) => item !== userGetInviteLogin)
 
-            await sqliteRun(`
+            await sqliteRunUsers(`
             UPDATE users_contact
             SET login_users_in_invite_list  = ?
             WHERE login_user = ?
@@ -232,7 +232,7 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
         }
 
         // Обновляем запись с новым списком контактов
-        // await sqliteRun(`
+        // await sqliteRunUsers(`
         //     UPDATE users_contact
         //     SET
         //         login_users_in_invite_list  = ?,
@@ -250,7 +250,7 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
 export async function declineInvitation(userSendInviteLogin: string, userGetInviteLogin: string): Promise<boolean> {
     try {
         // получаем запись юзера который получил заявку на приглашение в контакты
-        const objDataUserGetInviteLogin = await sqliteGet(`
+        const objDataUserGetInviteLogin = await sqliteGetUsers(`
             SELECT * FROM users_contact
             WHERE login_user = ?
         `, [userGetInviteLogin])
@@ -272,7 +272,7 @@ export async function declineInvitation(userSendInviteLogin: string, userGetInvi
             invitesCurrentUser = invitesCurrentUser.filter((item: string) => item !== userSendInviteLogin)
 
             // Обновляем запись
-            await sqliteRun(`
+            await sqliteRunUsers(`
             UPDATE users_contact
             SET login_users_in_invite_list  = ?
             WHERE login_user = ?
@@ -281,7 +281,7 @@ export async function declineInvitation(userSendInviteLogin: string, userGetInvi
 
         // обновляем запись для юзера который отправил запрос и его не добавили в контакты
         // получаем запись юзера отправившего запрос на добавление текущего юзера в контакты
-        const objDataUserSendInviteLogin = await sqliteGet(`
+        const objDataUserSendInviteLogin = await sqliteGetUsers(`
             SELECT * FROM users_contact
             WHERE login_user = ?
         `, [userSendInviteLogin])
@@ -304,7 +304,7 @@ export async function declineInvitation(userSendInviteLogin: string, userGetInvi
             invitesSendUser = invitesSendUser.filter((item: string) => item !== userGetInviteLogin)
 
             // Обновляем запись с новым инвайт списком
-            await sqliteRun(`
+            await sqliteRunUsers(`
             UPDATE users_contact
             SET login_users_in_invite_list  = ?
             WHERE login_user = ?
@@ -321,7 +321,7 @@ export async function declineInvitation(userSendInviteLogin: string, userGetInvi
 export async function getCurrentUserContactList(loginCurrentUser: string): Promise<Array<string>> {
     try {
         // получаем списка контактов текущего пользователя
-        const objDataCurrentUser = await sqliteGet(`
+        const objDataCurrentUser = await sqliteGetUsers(`
             SELECT * FROM users_contact
             WHERE login_user = ?
         `, [loginCurrentUser])
@@ -336,7 +336,7 @@ export async function getCurrentUserContactList(loginCurrentUser: string): Promi
 export async function getAllUserList(): Promise<{ usersList: Array<string>, usersCount: string }> {
     try {
         // получаем список всех созданных юзеров и их кол-во
-        const allUserList = await sqliteAll(`
+        const allUserList = await sqliteAllUsers(`
             SELECT * FROM users_contact
         `)
 

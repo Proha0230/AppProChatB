@@ -20,7 +20,8 @@ lerna-debug.log*
 /.nyc_output
 
 # Игнорируем файл базы данных
-/src/database/db/db.db
+/src/database/db/users/users-db.db
+/src/database/db/chats/chats-db.db
 identifier.sqlite
 
 # IDEs and editors

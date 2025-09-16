@@ -1,22 +1,27 @@
 import { Database } from "sqlite3";
-import { SQL_PATH } from "../config";
+import { SQL_PATH_USERS, SQL_PATH_CHATS } from "../config";
 
-console.log(SQL_PATH, "SQL_PATH")
-
-const db = new Database(SQL_PATH, (error) => {
+const dbUsers = new Database(SQL_PATH_USERS, (error) => {
     if (error) {
         console.error(error);
     }
 
-    console.log('Database Connected');
+    console.log('Database USERS Connected');
 })
 
+const dbChats = new Database(SQL_PATH_CHATS, (error) => {
+    if (error) {
+        console.error(error);
+    }
+
+    console.log('Database CHATS Connected');
+})
 // у db есть 3 метода -
 // run - для того чтобы выполнить какую либо команду в БД
 // get - для того чтобы достать одну строку из таблицы (одну запись)
 // all - для того чтобы достать весь список таблицы
 
-// db.run(` CREATE TABLE users_auth (
+// dbUsers.run(` CREATE TABLE users_auth (
 //         id INTEGER PRIMARY KEY,
 //         login TEXT NOT NULL,
 //         password TEXT NOT NULL
@@ -25,9 +30,10 @@ const db = new Database(SQL_PATH, (error) => {
 // // это очень устаревший синтаксис и нужно его переделать на промисы
 // })
 
-export function sqliteRun(sql: string, params?: Array<unknown>): Promise<any> {
+// TODO для БД USERS
+export function sqliteRunUsers(sql: string, params?: Array<unknown>): Promise<any> {
   return new Promise((resolve, reject) => {
-      db.run(sql, params, (error: unknown, data: unknown) => {
+      dbUsers.run(sql, params, (error: unknown, data: unknown) => {
           if (error) {
               return reject(error)
           }
@@ -36,9 +42,9 @@ export function sqliteRun(sql: string, params?: Array<unknown>): Promise<any> {
   })
 }
 
-export function sqliteGet(sql: string, params?: Array<unknown>): Promise<any> {
+export function sqliteGetUsers(sql: string, params?: Array<unknown>): Promise<any> {
     return new Promise((resolve, reject) => {
-        db.get(sql, params, (error: unknown, data: unknown) => {
+        dbUsers.get(sql, params, (error: unknown, data: unknown) => {
             if (error) {
                 return reject(error)
             }
@@ -47,9 +53,9 @@ export function sqliteGet(sql: string, params?: Array<unknown>): Promise<any> {
     })
 }
 
-export function sqliteAll(sql: string, params?: Array<unknown>): Promise<any> {
+export function sqliteAllUsers(sql: string, params?: Array<unknown>): Promise<any> {
     return new Promise((resolve, reject) => {
-        db.all(sql, params, (error: unknown, data: unknown) => {
+        dbUsers.all(sql, params, (error: unknown, data: unknown) => {
             if (error) {
                 return reject(error)
             }
@@ -58,4 +64,37 @@ export function sqliteAll(sql: string, params?: Array<unknown>): Promise<any> {
     })
 }
 
+// TODO для БД CHATS
+export function sqliteRunChats(sql: string, params?: Array<unknown>): Promise<any> {
+    return new Promise((resolve, reject) => {
+        dbChats.run(sql, params, (error: unknown, data: unknown) => {
+            if (error) {
+                return reject(error)
+            }
+            resolve(data)
+        })
+    })
+}
+
+export function sqliteGetChats(sql: string, params?: Array<unknown>): Promise<any> {
+    return new Promise((resolve, reject) => {
+        dbChats.get(sql, params, (error: unknown, data: unknown) => {
+            if (error) {
+                return reject(error)
+            }
+            resolve(data)
+        })
+    })
+}
+
+export function sqliteAllChats(sql: string, params?: Array<unknown>): Promise<any> {
+    return new Promise((resolve, reject) => {
+        dbChats.all(sql, params, (error: unknown, data: unknown) => {
+            if (error) {
+                return reject(error)
+            }
+            resolve(data)
+        })
+    })
+}
 // мы их сделали ассинхронными и теперь мы можем орудовать async/await c этими промисами

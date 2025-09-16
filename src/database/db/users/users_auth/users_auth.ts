@@ -1,17 +1,17 @@
-import { sqliteGet, sqliteRun } from "../../db-connection";
-import { isUserObject } from "../../users-repository"
+import { sqliteGetUsers, sqliteRunUsers } from "../../../db-connection";
+import { isUserObject } from "../../../users-repository"
 
-// вставить в нашу таблицу users_auth запись
+// TODO функция создания нового пользователя
 export async function createUsers(user: { id?: string, login?: string, password?: string }): Promise<boolean> {
     // создаем запись в таблице аутентификации
     try {
-        await sqliteRun(`
+        await sqliteRunUsers(`
             INSERT INTO users_auth (id, login, password)
             VALUES (?, ?, ?)
         `, [user.id, user.login, user.password])
 
         // создаем запись в таблице контактов
-        await sqliteRun(`
+        await sqliteRunUsers(`
             INSERT INTO users_contact (login_user, login_users_in_contact_list, login_users_in_invite_list)
             VALUES (?, ?, ?)
         `, [user.login, "[]", "[]"])
@@ -22,11 +22,10 @@ export async function createUsers(user: { id?: string, login?: string, password?
     }
 }
 
-// выбрать всех из таблицы users_auth
-// у кого login равен login
+// TODO функция авторизации пользователя (сверки Login & Password)
 export async function getUsersLogin(login: string): Promise<{ id?: string, login?: string, password?: string, error?: string }> {
     try {
-        const data = await sqliteGet(`
+        const data = await sqliteGetUsers(`
             SELECT *
             FROM users_auth
             WHERE login = ?

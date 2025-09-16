@@ -6,7 +6,7 @@ import {
     removeUserFromContactList,
     getCurrentUserContactList,
     getAllUserList
-} from "../../database/db/users_contact/users_contact";
+} from "../../database/db/users/users_contact/users_contact";
 
 @Injectable()
 export class UsersContactService {
