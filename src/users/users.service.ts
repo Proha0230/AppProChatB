@@ -1,5 +1,5 @@
-import {Injectable} from '@nestjs/common';
-import {createUsers, deleteUsers, getOneUsersLogin, getOneUsersId} from "../database/users-repository";
+import { Injectable } from '@nestjs/common';
+import { deleteUsers, getOneUsersId} from "../database/users-repository";
 
 @Injectable()
 export class UsersService {
@@ -14,68 +14,9 @@ export class UsersService {
             })
     }
 
-    async getLogin(params: { login: string, password: string }): Promise<{ error?: string, baererToken?: string }> {
-        if (params?.login && params?.password) {
-            const userObj = await getOneUsersLogin(params.login)
-
-            if (userObj?.error) {
-                return { error: "Пользователь не найден"}
-            }
-
-            if (params?.login && params?.password === userObj?.password) {
-                return { baererToken: userObj.id }
-            } else {
-                return { error: "Пароль неверный"}
-            }
-        }
-
-        if (params?.login && !params?.password) {
-            return { error: "Введите пароль"}
-        }
-
-        if (!params?.login && params?.password) {
-            return { error: "Введите логин"}
-        }
-
-        if (!params?.login && !params?.password) {
-            return { error: "Введите логин и пароль"}
-        }
-
-        return { error: "Ошибка, попробуйте позже"}
-    }
-
     async deleteUser(id: string): Promise<{ response?: string }> {
         await deleteUsers(id)
         return { response: "Пользователь удален"}
-    }
-
-    async createUser(params: { login?: string, password?: string }) {
-        if (params?.login && params?.password) {
-            const newUserObj = {
-                id: crypto.randomUUID(),
-                ...params
-            }
-
-            await createUsers(newUserObj)
-
-            return `
-                Пользователь создан: 
-                Login: ${params.login} 
-                Password: ${params.password}
-            `
-        }
-
-        if (params?.login && !params?.password) {
-            return { error: "Введите пароль"}
-        }
-
-        if (!params?.login && params?.password) {
-            return { error: "Введите логин"}
-        }
-
-        if (!params?.login && !params?.password) {
-            return { error: "Введите логин и пароль"}
-        }
     }
 
     updateUser(id: string, params: { name: string, lastName: string }) {

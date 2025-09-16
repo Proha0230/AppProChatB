@@ -9,14 +9,6 @@
 
 import {sqliteAll, sqliteGet, sqliteRun} from "./db-connection";
 
-// вставить в нашу таблицу users_auth запись
-export async function createUsers(user: { id?: string, login?: string, password?: string }): Promise<void> {
-    await sqliteRun(`
-    INSERT INTO users_auth (id, login, password)
-    VALUES (?, ?, ?)
-    `, [user.id, user.login, user.password])
-}
-
 // обновить таблицу users_auth поменять поле
 // у id такого то
 export async function updateUsers(user): Promise<void> {
@@ -53,21 +45,6 @@ export async function getOneUsersId(id: string): Promise<{ id?: string, login?: 
 }
 
 // выбрать всех из таблицы users_auth
-// у кого login равен login
-export async function getOneUsersLogin(login: string): Promise<{ id?: string, login?: string, password?: string, error?: string }> {
-    const data = await sqliteGet(`
-        SELECT * FROM users_auth
-        WHERE login = ?
-    `, [login])
-
-    if (isUserObject(data)) {
-        return data
-    } else {
-        return { error: "Пользователь не найден"}
-    }
-}
-
-// выбрать всех из таблицы users_auth
 export async function getAllUsers(): Promise<Array<{ id?: string, login?: string, password?: string }> | { error?: string }> {
     const data = await sqliteAll(`
         SELECT * FROM users_auth
@@ -85,6 +62,6 @@ export async function getAllUsers(): Promise<Array<{ id?: string, login?: string
 }
 
 // typeGuard - проверка на то, что мы вернули запись о юзере
-function isUserObject(user: { id: string, login: string, password: string }): boolean {
+export function isUserObject(user: { id: string, login: string, password: string }): boolean {
     return Boolean(user && typeof user === 'object' && user.id && user.login && user.password)
 }

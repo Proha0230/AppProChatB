@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, Query} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 
 // когда мы создаем контроллер с префиксом - то NestJS автоматически будет добавлять его к урлу
@@ -31,12 +31,6 @@ export class UsersController {
         return this.usersService.getUserId(id)
     }
 
-    @Get('/login')
-    // так достаем несколько параметров из урла
-    getGreetingUser(@Body() params: { login: string, password: string }): Promise<{ error?: string, baererToken?: string }> {
-        return this.usersService.getLogin(params)
-    }
-
     // либо таким образом достаем несколько параметров из урла
     // @Get('/user/:id/info/:name')
     // getHelloUser(
@@ -46,11 +40,6 @@ export class UsersController {
     //     return this.appService.getSayHelloId(id, name)
     // }
 
-    @Post('/create')
-    // декоратор @Body() достает payload ручки для дальнейшего использования
-    createUser(@Body() params: { login: string, password: string }) {
-        return this.usersService.createUser(params)
-    }
 
     // использование декораторов @Param(), @Body() на PATCH декораторе (запросе)
     @Patch('/update/:id')
