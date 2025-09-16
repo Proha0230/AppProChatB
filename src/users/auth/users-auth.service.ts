@@ -3,7 +3,9 @@ import { createUsers, getUsersLogin } from "../../database/db/users_auth/users_a
 
 @Injectable()
 export class UsersAuthService {
-    async getLogin(params: { login: string, password: string }): Promise<{ error?: string, baererToken?: string }> {
+
+    // TODO функция авторизации пользователя (сверки Login & Password)
+    async getLogin(params: { login: string, password: string }): Promise<{ error?: string, bearerToken?: string }> {
         if (params?.login && params?.password) {
             const userObj = await getUsersLogin(params.login)
 
@@ -12,7 +14,7 @@ export class UsersAuthService {
             }
 
             if (params?.login && params?.password === userObj?.password) {
-                return { baererToken: userObj.id }
+                return { bearerToken: userObj.id }
             } else {
                 return { error: "Пароль неверный"}
             }
@@ -33,6 +35,7 @@ export class UsersAuthService {
         return { error: "Ошибка, попробуйте позже"}
     }
 
+    // TODO функция создания нового пользователя
     async createUser(params: { login?: string, password?: string }) {
         if (params?.login && params?.password) {
             const newUserObj = {
