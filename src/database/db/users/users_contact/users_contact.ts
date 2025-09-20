@@ -1,4 +1,11 @@
-import { sqliteAllUsers, sqliteGetUsers, sqliteRunUsers } from "../../../db-connection";
+import {sqliteAllUsers, sqliteGetUsers, sqliteRunUsers} from "../../../db-connection";
+
+//TODO функция получения плейсхолдеров для получения данных из sql
+export function getPlaceholder(array: Array<any>): string {
+    return array.map(() => '?').join(', ')
+}
+
+
 
 // TODO функция по отправке запроса в добавление в контакты юзера
 export async function sendUserInviteInContact(userSendInviteLogin: string, userGetInviteLogin: string): Promise<boolean> {
@@ -333,15 +340,122 @@ export async function getCurrentUserContactList(loginCurrentUser: string): Promi
 }
 
 // TODO функция получения всех созданных юзеров
-export async function getAllUserList(): Promise<{ usersList: Array<string>, usersCount: string }> {
+export async function getAllUsersList(): Promise<{ usersList: Array<{ userName: string, userContactList: Array<string>, userAvatar: string, userInviteList: Array<string> }>, usersCount: string }> {
     try {
         // получаем список всех созданных юзеров и их кол-во
         const allUserList = await sqliteAllUsers(`
             SELECT * FROM users_contact
         `)
 
-        return { usersList: allUserList, usersCount: allUserList?.length?.toString() || "0"}
+        const resultUserList = allUserList.map((user: { login_user: string, login_users_in_contact_list: string, login_users_in_invite_list: string, avatar_user?: "" }) => {
+            return {
+                userName: user.login_user,
+                userContactList: user.login_users_in_contact_list,
+                userAvatar: user.avatar_user ?? "https://blokator-virusov.ru/img/design/noava.png",
+                userInviteList: user.login_users_in_invite_list
+            }
+        })
+
+        return { usersList: resultUserList, usersCount: allUserList?.length?.toString() || "0"}
     } catch {
         return { usersList: [], usersCount: "0" }
     }
+}
+
+// TODO функция получения всех юзеров отправивших заявки на добавление в контакты пользователя
+export async function getUserListSendsInviteContact(userId: string) {
+    try {
+        const objAuthDataUser = await sqliteGetUsers(`
+            SELECT * FROM users_auth
+            WHERE id = ?
+        `, [userId])
+
+        const objContactDataUser = await sqliteGetUsers(`
+            SELECT * FROM users_contact
+            WHERE login_user = ?
+        `, [objAuthDataUser.login])
+
+        const userInviteList = objContactDataUser?.login_users_in_invite_list
+
+        let invitesList: string[] = []
+
+        if (userInviteList) {
+            try {
+                invitesList = JSON.parse(userInviteList)
+            } catch {
+                invitesList = []
+            }
+        }
+
+        // делаем плейсхолдеры для IN
+        const placeholders = getPlaceholder(invitesList)
+
+
+        if (placeholders) {
+            const data = await sqliteAllUsers(`
+                SELECT * FROM users_contact
+                WHERE login_user IN (${placeholders})
+            `, invitesList)
+
+            return data.length ? data.map((user) => {
+                return {
+                    userName: user.login_user,
+                    userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
+                    userContactList: user.login_users_in_contact_list
+                }
+            }) : []
+        } else {
+            return []
+        }
+
+    } catch {}
+}
+
+// TODO функция получения всех контактов пользователя
+export async function getUserListContact(userId: string) {
+    try {
+        const objAuthDataUser = await sqliteGetUsers(`
+            SELECT * FROM users_auth
+            WHERE id = ?
+        `, [userId])
+
+        const objContactDataUser = await sqliteGetUsers(`
+            SELECT * FROM users_contact
+            WHERE login_user = ?
+        `, [objAuthDataUser.login])
+
+        const userContactList = objContactDataUser?.login_users_in_contact_list
+
+        let contactList: string[] = []
+
+        if (userContactList) {
+            try {
+                contactList = JSON.parse(userContactList)
+            } catch {
+                contactList = []
+            }
+        }
+
+        // делаем плейсхолдеры для IN
+        const placeholders = getPlaceholder(contactList)
+
+
+        if (placeholders) {
+            const data = await sqliteAllUsers(`
+                SELECT * FROM users_contact
+                WHERE login_user IN (${placeholders})
+            `, contactList)
+
+            return data.length ? data.map((user) => {
+                return {
+                    userName: user.login_user,
+                    userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
+                    userContactList: user.login_users_in_contact_list
+                }
+            }) : []
+        } else {
+            return []
+        }
+
+    } catch {}
 }

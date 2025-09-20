@@ -10,7 +10,8 @@ export async function createTablesUsers(nameTable: string, fields: Array<string>
         CREATE TABLE IF NOT EXISTS ${nameTable} (
             ${fields[0]} TEXT PRIMARY KEY,
             ${fields[1]} TEXT NOT NULL,
-            ${fields[2]} TEXT NOT NULL
+            ${fields[2]} TEXT NOT NULL,
+            ${fields[3]} TEXT
         )
     `)
 }

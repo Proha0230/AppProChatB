@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Post} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Headers, Post} from "@nestjs/common"
 import { UsersContactService } from "./users-contact.service"
 
 @Controller('users-contact')
@@ -20,7 +20,7 @@ export class UsersContactController {
         return await this.usersContactService.declineUserInvitation(params.userSendInviteLogin, params.userGetInviteLogin)
     }
 
-    @Delete('/delete-from-list')
+    @Post('/delete-contact')
     async removeUserFromContact(@Body() params: { currentUserLogin: string, deleteUserLogin: string }): Promise<{ error?: string, response?: string}> {
         return await this.usersContactService.removeUserFromContact(params.currentUserLogin, params.deleteUserLogin)
     }
@@ -31,7 +31,17 @@ export class UsersContactController {
     }
 
     @Get('/all-users-list')
-    async getAllUsersList(): Promise<{ usersList: Array<string>, usersCount: string }> {
+    async getAllUsersList(): Promise<{ usersList: Array<{ userName: string, userContactList: Array<string>, userAvatar: string, userInviteList: Array<string> }>, usersCount: string }> {
         return await this.usersContactService.getAllUsersList()
+    }
+
+    @Get('/all-sends-invite')
+    async getAllUsersSendsInvite(@Headers () params: { authorization: string }) {
+        return await this.usersContactService.getAllUsersSendsInvite(params.authorization)
+    }
+
+    @Get('/get-all')
+    async getAllUsersContact(@Headers () params: { authorization: string }) {
+        return await this.usersContactService.getAllUsersContact(params.authorization)
     }
 }

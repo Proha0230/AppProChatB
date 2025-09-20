@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { createUsers, getUsersLogin } from "../../database/db/users/users_auth/users_auth";
+import { createUsers, getUsersLogin, getUserById } from "../../database/db/users/users_auth/users_auth";
 
 @Injectable()
 export class UsersAuthService {
@@ -36,20 +36,19 @@ export class UsersAuthService {
     }
 
     // TODO функция создания нового пользователя
-    async createUser(params: { login?: string, password?: string }) {
+    async createUser(params: { login?: string, password?: string }) : Promise<{ login?: string, password?:string, error?: string }> {
         if (params?.login && params?.password) {
             const newUserObj = {
                 id: crypto.randomUUID(),
-                ...params
+                user_avatar: null,
+                ...params,
+                login: params?.login.toLowerCase(),
             }
 
+            console.log(newUserObj, "newUserObj")
             await createUsers(newUserObj)
 
-            return `
-                Пользователь создан: 
-                Login: ${params.login} 
-                Password: ${params.password}
-            `
+            return { login : params.login, password: params.password }
         }
 
         if (params?.login && !params?.password) {
@@ -63,5 +62,26 @@ export class UsersAuthService {
         if (!params?.login && !params?.password) {
             return { error: "Введите логин и пароль"}
         }
+
+        return { error: "Ошибка регистрации" }
     }
+
+    // TODO функция для получения данных по текущему пользователю
+    async getUserInfo(authorization: string): Promise<{ login?: string, userAvatar?: string, error?: string }> {
+        if (authorization) {
+            return await getUserById(authorization)
+        }
+
+        return { error: "Ошибка авторизации. Отказано в доступе"}
+    }
+
+    // TODO функция по добавлению ячейки в таблицу БД
+    // async addColumn(params: { columnName: string, columnDefaultValue: any }) {
+    //         await createAddColumn(params)
+    // }
+
+    // TODO функция (транкейт) по очищению данных таблицы без удаления разметки таблицы
+    // async deleteTable(params: { nameDeleteTable: string }) {
+    //     await deleteTableInDb(params)
+    // }
 }
