@@ -41,11 +41,10 @@ export class UsersAuthService {
             const newUserObj = {
                 id: crypto.randomUUID(),
                 user_avatar: null,
-                ...params,
+                password: params?.password,
                 login: params?.login.toLowerCase(),
             }
 
-            console.log(newUserObj, "newUserObj")
             await createUsers(newUserObj)
 
             return { login : params.login, password: params.password }
@@ -67,7 +66,7 @@ export class UsersAuthService {
     }
 
     // TODO функция для получения данных по текущему пользователю
-    async getUserInfo(authorization: string): Promise<{ login?: string, userAvatar?: string, error?: string }> {
+    async getUserInfo(authorization: string): Promise<{ login?: string, userAvatar?: null, userStatus?: string, userInviteList?: Array<string>, userContactList?: Array<string>, error?: string }> {
         if (authorization) {
             return await getUserById(authorization)
         }

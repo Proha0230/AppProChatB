@@ -324,34 +324,20 @@ export async function declineInvitation(userSendInviteLogin: string, userGetInvi
     }
 }
 
-// TODO функция получения списка контактов текущего пользователя
-export async function getCurrentUserContactList(loginCurrentUser: string): Promise<Array<string>> {
-    try {
-        // получаем списка контактов текущего пользователя
-        const objDataCurrentUser = await sqliteGetUsers(`
-            SELECT * FROM users_contact
-            WHERE login_user = ?
-        `, [loginCurrentUser])
-
-        return objDataCurrentUser?.login_users_in_contact_list
-    } catch {
-        return []
-    }
-}
-
 // TODO функция получения всех созданных юзеров
-export async function getAllUsersList(): Promise<{ usersList: Array<{ userName: string, userContactList: Array<string>, userAvatar: string, userInviteList: Array<string> }>, usersCount: string }> {
+export async function getAllUsersList(): Promise<{ usersList: Array<{ userName: string, userStatus:string, userContactList: Array<string>, userAvatar: string, userInviteList: Array<string> }>, usersCount: string }> {
     try {
         // получаем список всех созданных юзеров и их кол-во
         const allUserList = await sqliteAllUsers(`
             SELECT * FROM users_contact
         `)
 
-        const resultUserList = allUserList.map((user: { login_user: string, login_users_in_contact_list: string, login_users_in_invite_list: string, avatar_user?: "" }) => {
+        const resultUserList = allUserList.map((user: { login_user: string, user_status:string, login_users_in_contact_list: string, login_users_in_invite_list: string, user_avatar?: "" }) => {
             return {
                 userName: user.login_user,
+                userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
+                userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!",
                 userContactList: user.login_users_in_contact_list,
-                userAvatar: user.avatar_user ?? "https://blokator-virusov.ru/img/design/noava.png",
                 userInviteList: user.login_users_in_invite_list
             }
         })
@@ -401,6 +387,7 @@ export async function getUserListSendsInviteContact(userId: string) {
                 return {
                     userName: user.login_user,
                     userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
+                    userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!",
                     userContactList: user.login_users_in_contact_list
                 }
             }) : []
@@ -450,6 +437,7 @@ export async function getUserListContact(userId: string) {
                 return {
                     userName: user.login_user,
                     userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
+                    userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!",
                     userContactList: user.login_users_in_contact_list
                 }
             }) : []

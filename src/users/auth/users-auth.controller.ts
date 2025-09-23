@@ -17,7 +17,7 @@ export class UsersAuthController {
     }
 
     @Get('/get-info')
-    getUserInfo(@Headers () params: { authorization: string }): Promise<{ login?: string, userAvatar?: string, error?: string }> {
+    getUserInfo(@Headers () params: { authorization: string }): Promise<{ login?: string, userAvatar?: null, userStatus?: string, userInviteList?: Array<string>, userContactList?: Array<string>, error?: string }> {
         return this.usersAuthService.getUserInfo(params.authorization)
     }
 

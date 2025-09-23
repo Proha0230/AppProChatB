@@ -4,7 +4,6 @@ import {
     acceptInvitation,
     declineInvitation,
     removeUserFromContactList,
-    getCurrentUserContactList,
     getAllUsersList,
     getUserListSendsInviteContact,
     getUserListContact
@@ -55,11 +54,6 @@ export class UsersContactService {
         } else {
             return { error: "Ошибка при добавлении контакта" }
         }
-    }
-
-    // TODO функция получения списка контактов текущего пользователя
-    async getMyContactList(loginCurrentUser: string): Promise<Array<string>> {
-        return await getCurrentUserContactList(loginCurrentUser)
     }
 
     // TODO функция получения всех созданных юзеров

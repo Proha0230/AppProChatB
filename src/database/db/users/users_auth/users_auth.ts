@@ -3,7 +3,6 @@ import { isUserObject } from "../../../users-repository"
 
 // TODO функция создания нового пользователя
 export async function createUsers(user: { id?: string, user_avatar?: null, login?: string, password?: string }): Promise<boolean> {
-    console.log(user.login, "user.login")
     // создаем запись в таблице аутентификации
     try {
         await sqliteRunUsers(`
@@ -13,9 +12,9 @@ export async function createUsers(user: { id?: string, user_avatar?: null, login
 
         // создаем запись в таблице контактов
         await sqliteRunUsers(`
-            INSERT INTO users_contact (login_user, login_users_in_contact_list, login_users_in_invite_list, user_avatar)
-            VALUES (?, ?, ?, ?)
-        `, [user.login, "[]", "[]", user.user_avatar])
+            INSERT INTO users_contact (login_user, login_users_in_contact_list, login_users_in_invite_list, user_avatar, user_status)
+            VALUES (?, ?, ?, ?, ?)
+        `, [user.login, "[]", "[]", user.user_avatar, null])
 
         return true
     } catch {
@@ -27,8 +26,7 @@ export async function createUsers(user: { id?: string, user_avatar?: null, login
 export async function getUsersLogin(login: string): Promise<{ id?: string, login?: string, password?: string, user_avatar?: null, error?: string }> {
     try {
         const data = await sqliteGetUsers(`
-            SELECT *
-            FROM users_auth
+            SELECT * FROM users_auth
             WHERE login = ?
         `, [login])
 
@@ -40,7 +38,7 @@ export async function getUsersLogin(login: string): Promise<{ id?: string, login
 }
 
 // TODO функция для получения данных по текущему пользователю
-export async function getUserById(id: string): Promise<{ id?: string, login?: string, password?: string, user_avatar?: null, error?: string }> {
+export async function getUserById(id: string): Promise<{ login?: string, userAvatar?: null, userStatus?: string, userInviteList?: Array<string>, userContactList?: Array<string>, error?: string }> {
     try {
         const dataAuthUser = await sqliteGetUsers(`
             SELECT * FROM users_auth
@@ -55,6 +53,7 @@ export async function getUserById(id: string): Promise<{ id?: string, login?: st
         const resultDataUser = {
             login: dataContactUser.login_user,
             userAvatar: dataContactUser.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
+            userStatus: dataContactUser.user_status ?? "Всем привет! Я использую AppProChat!",
             userInviteList: dataContactUser.login_users_in_invite_list,
             userContactList: dataContactUser.login_users_in_contact_list,
         }
