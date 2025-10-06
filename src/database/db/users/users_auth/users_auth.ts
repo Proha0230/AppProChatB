@@ -1,20 +1,27 @@
 import { sqliteGetUsers, sqliteRunUsers } from "../../../db-connection";
 import { isUserObject } from "../../../users-repository"
+import type { CreateUserObject, UserInfoObject, UserInfoObjectResponse, UserLoginInfo } from "../types";
 
 // TODO функция создания нового пользователя
-export async function createUsers(user: { id?: string, user_avatar?: null, login?: string, password?: string }): Promise<boolean> {
+export async function createUsers(data: CreateUserObject): Promise<boolean> {
     // создаем запись в таблице аутентификации
     try {
         await sqliteRunUsers(`
-            INSERT INTO users_auth (id, login, password, user_avatar)
-            VALUES (?, ?, ?, ?)
-        `, [user.id, user.login, user.password, user.user_avatar])
+            INSERT INTO users_auth (id, login, password)
+            VALUES (?, ?, ?)
+        `, [data.id, data.login, data.password])
 
         // создаем запись в таблице контактов
         await sqliteRunUsers(`
-            INSERT INTO users_contact (login_user, login_users_in_contact_list, login_users_in_invite_list, user_avatar, user_status)
-            VALUES (?, ?, ?, ?, ?)
-        `, [user.login, "[]", "[]", user.user_avatar, null])
+            INSERT INTO users_contact (login_user, user_avatar, user_status)
+            VALUES (?, ?, ?)
+        `, [data.login, data.user_avatar, null])
+
+        // создаем запись в таблице контактов
+        await sqliteRunUsers(`
+            INSERT INTO users_info (id, login_user, user_avatar, user_lang, user_status, user_chats_list, user_black_list, login_users_in_contact_list, login_users_in_invite_list, login_users_whom_i_sent_invite)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [data.id, data.login, data.user_avatar, data.user_lang, null, "[]", "[]", "[]", "[]", "[]"])
 
         return true
     } catch {
@@ -23,9 +30,9 @@ export async function createUsers(user: { id?: string, user_avatar?: null, login
 }
 
 // TODO функция авторизации пользователя (сверки Login & Password)
-export async function getUsersLogin(login: string): Promise<{ id?: string, login?: string, password?: string, user_avatar?: null, error?: string }> {
+export async function getUsersLogin(login: string): Promise<UserLoginInfo |{ error?: string }> {
     try {
-        const data = await sqliteGetUsers(`
+        const data: UserLoginInfo = await sqliteGetUsers(`
             SELECT * FROM users_auth
             WHERE login = ?
         `, [login])
@@ -38,27 +45,26 @@ export async function getUsersLogin(login: string): Promise<{ id?: string, login
 }
 
 // TODO функция для получения данных по текущему пользователю
-export async function getUserById(id: string): Promise<{ login?: string, userAvatar?: null, userStatus?: string, userInviteList?: Array<string>, userContactList?: Array<string>, error?: string }> {
+export async function getUserById(id: string): Promise<UserInfoObjectResponse | { error: string }> {
     try {
-        const dataAuthUser = await sqliteGetUsers(`
-            SELECT * FROM users_auth
+        const dataUserInfo: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE id = ?
         `, [id])
 
-        const dataContactUser = await sqliteGetUsers(`
-            SELECT * FROM users_contact
-            WHERE login_user = ?
-        `, [dataAuthUser.login])
-
-        const resultDataUser = {
-            login: dataContactUser.login_user,
-            userAvatar: dataContactUser.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
-            userStatus: dataContactUser.user_status ?? "Всем привет! Я использую AppProChat!",
-            userInviteList: dataContactUser.login_users_in_invite_list,
-            userContactList: dataContactUser.login_users_in_contact_list,
-        }
-
-        return dataContactUser ? resultDataUser : { error: "Пользователь не найден" }
+        return dataUserInfo
+            ? {
+                login: dataUserInfo.login_user,
+                avatar: dataUserInfo.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
+                lang: dataUserInfo.user_lang,
+                status: dataUserInfo.user_status ?? "Всем привет! Я использую AppProChat!",
+                chatsList: dataUserInfo.user_chats_list,
+                blackList: dataUserInfo.user_black_list,
+                usersInInviteList: dataUserInfo.login_users_in_invite_list,
+                usersInContactList: dataUserInfo.login_users_in_contact_list,
+                usersWhomISentInvite: dataUserInfo.login_users_whom_i_sent_invite
+            }
+            : { error: "Пользователь не найден" }
 
     } catch {
         return { error: "Ошибка" }

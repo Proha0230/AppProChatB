@@ -1,4 +1,5 @@
-import {sqliteAllUsers, sqliteGetUsers, sqliteRunUsers} from "../../../db-connection";
+import { sqliteAllUsers, sqliteGetUsers, sqliteRunUsers } from "../../../db-connection";
+import {UserAll, UserContactObject, UserContactObjectResponse, UserInfoObject} from "../types";
 
 //TODO функция получения плейсхолдеров для получения данных из sql
 export function getPlaceholder(array: Array<any>): string {
@@ -7,50 +8,79 @@ export function getPlaceholder(array: Array<any>): string {
 
 
 
-// TODO функция по отправке запроса в добавление в контакты юзера
+// TODO функция по отправке запроса на добавление в контакты юзера
 export async function sendUserInviteInContact(userSendInviteLogin: string, userGetInviteLogin: string): Promise<boolean> {
 // выбрать всех из таблицы users_contact
 // у кого login_user равен userGetInviteLogin
     try {
-        const objDataUserGetInviteLogin = await sqliteGetUsers(`
-            SELECT * FROM users_contact
+        const objDataUserGetInviteLogin: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE login_user = ?
         `, [userGetInviteLogin])
 
-        // Берём текущее значение всех кто добавил его в контакты
-        const currentInviteList = objDataUserGetInviteLogin?.login_users_in_invite_list
-        const currentContactList = objDataUserGetInviteLogin?.login_users_in_contact_list
+        // обьект текущего пользователя кто инвайтнул пользователя
+        const objDataUserSendInviteLogin: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
+            WHERE login_user = ?
+        `, [userSendInviteLogin])
 
-        // Преобразуем в массив
-        let invitesList: string[] = []
-        let contactList: string[] = []
+        // список тех кого текущий пользователь уже заинвайтил в контакты
+        const currentUserWhomSentInviteList = objDataUserSendInviteLogin.login_users_whom_i_sent_invite
+        let currentUserWhomSentInviteListArr: Array<string> = []
 
-        if (currentInviteList) {
+        if (currentUserWhomSentInviteList) {
             try {
-                invitesList = JSON.parse(currentInviteList)
+                currentUserWhomSentInviteListArr = JSON.parse(currentUserWhomSentInviteList)
             } catch {
-                invitesList = []
+                currentUserWhomSentInviteListArr = []
             }
         }
 
-        if (currentContactList) {
+        // Берём текущее значение всех кто уже добавил заинвайченного юзера в контакты
+        const userGetInviteList = objDataUserGetInviteLogin?.login_users_in_invite_list
+        const userGetContactList = objDataUserGetInviteLogin?.login_users_in_contact_list
+
+        // Преобразуем в массив
+        let userGetInviteListArr: Array<string> = []
+        let userGetContactListArr: Array<string> = []
+
+        if (userGetInviteList) {
             try {
-                contactList = JSON.parse(currentContactList)
+                userGetInviteListArr = JSON.parse(userGetInviteList)
             } catch {
-                contactList = []
+                userGetInviteListArr = []
+            }
+        }
+
+        if (userGetContactList) {
+            try {
+                userGetContactListArr = JSON.parse(userGetContactList)
+            } catch {
+                userGetContactListArr = []
             }
         }
 
         // Добавляем логин, если его нет в списке инвайтов и нет в списке друзей
-        if (!invitesList.includes(userSendInviteLogin) && !contactList.includes(userSendInviteLogin)) {
-            invitesList.push(userSendInviteLogin)
+        if (!userGetInviteListArr.includes(userSendInviteLogin) && !userGetContactListArr.includes(userSendInviteLogin) && !currentUserWhomSentInviteListArr.includes(userGetInviteLogin)) {
+            userGetInviteListArr.push(userSendInviteLogin)
 
             // Обновляем запись
             await sqliteRunUsers(`
-            UPDATE users_contact
+            UPDATE users_info
             SET login_users_in_invite_list = ?
             WHERE login_user = ?
-        `, [JSON.stringify(invitesList), userGetInviteLogin])
+        `, [JSON.stringify(userGetInviteListArr), userGetInviteLogin])
+
+
+            // добавляем в список отправленных инвайтов текущего пользователя
+            currentUserWhomSentInviteListArr.push(userGetInviteLogin)
+
+            // Обновляем запись
+            await sqliteRunUsers(`
+            UPDATE users_info
+            SET login_users_whom_i_sent_invite = ?
+            WHERE login_user = ?
+        `, [JSON.stringify(currentUserWhomSentInviteListArr), userSendInviteLogin])
         }
 
         return true
@@ -62,8 +92,9 @@ export async function sendUserInviteInContact(userSendInviteLogin: string, userG
 // TODO функция удаления пользователя из списка контактов
 export async function removeUserFromContactList(currentUserLogin: string, deleteUserLogin: string): Promise<boolean> {
     try {
-        const objDataCurrentUser = await sqliteGetUsers(`
-            SELECT * FROM users_contact
+        // удаляем пользователя из списка контактов
+        const objDataCurrentUser: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE login_user = ?
         `, [currentUserLogin])
 
@@ -78,20 +109,21 @@ export async function removeUserFromContactList(currentUserLogin: string, delete
             }
         }
 
-        if (currentUserContactList.includes(deleteUserLogin)) {
+        if (contactsCurrentUser.includes(deleteUserLogin)) {
             contactsCurrentUser = contactsCurrentUser.filter((item: string) => item !== deleteUserLogin)
 
-            // Обновляем запись
+            // Обновляем запись в таблице
             await sqliteRunUsers(`
-            UPDATE users_contact
+            UPDATE users_info
             SET login_users_in_contact_list = ?
             WHERE login_user = ?
         `, [JSON.stringify(contactsCurrentUser), currentUserLogin])
         }
 
+
         // удалим контакт текущего пользователя из списка контактов пользователя которого удалили
-        const objDataDeleteUser = await sqliteGetUsers(`
-            SELECT * FROM users_contact
+        const objDataDeleteUser: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE login_user = ?
         `, [deleteUserLogin])
 
@@ -107,12 +139,12 @@ export async function removeUserFromContactList(currentUserLogin: string, delete
             }
         }
 
-        if (deleteUserContactList.includes(currentUserLogin)) {
+        if (contactsDeleteUser.includes(currentUserLogin)) {
             contactsDeleteUser = contactsDeleteUser.filter((item: string) => item !== currentUserLogin)
 
-            // Обновляем запись
+            // Обновляем запись в таблице
             await sqliteRunUsers(`
-            UPDATE users_contact
+            UPDATE users_info
             SET login_users_in_contact_list = ?
             WHERE login_user = ?
         `, [JSON.stringify(contactsDeleteUser), deleteUserLogin])
@@ -127,26 +159,16 @@ export async function removeUserFromContactList(currentUserLogin: string, delete
 // TODO функция принятия запроса в контакты
 export async function acceptInvitation(userSendInviteLogin: string, userGetInviteLogin: string): Promise<boolean> {
     try {
-        const objDataUserGetInviteLogin = await sqliteGetUsers(`
-            SELECT * FROM users_contact
+        const objDataUserGetInviteLogin: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE login_user = ?
         `, [userGetInviteLogin])
 
         // Берём текущее значение всех кто добавился в контакты юзеру
-        const currentUserInviteList = objDataUserGetInviteLogin?.login_users_in_invite_list
         const currentUserContactList = objDataUserGetInviteLogin?.login_users_in_contact_list
 
         // Преобразуем в массив
-        let invitesCurrentUser: string[] = []
         let contactsCurrentUser: string[] = []
-
-        if (currentUserInviteList) {
-            try {
-                invitesCurrentUser = JSON.parse(currentUserInviteList)
-            } catch {
-                invitesCurrentUser = []
-            }
-        }
 
         if (currentUserContactList) {
             try {
@@ -156,57 +178,29 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
             }
         }
 
-        // Удаляем логин юзера кто прислал нам приглашение из списка отправивших заявку в контакт
-        if (invitesCurrentUser.includes(userSendInviteLogin)) {
-            invitesCurrentUser = invitesCurrentUser.filter((item: string) => item !== userSendInviteLogin)
-
-            await sqliteRunUsers(`
-                UPDATE users_contact
-                SET login_users_in_invite_list  = ?
-                WHERE login_user = ?
-            `, [JSON.stringify(invitesCurrentUser), userGetInviteLogin])
-        }
-
-        // Добавляем этого юзера в список контактов
+        // Добавляем юзера отправившего инвайт в список контактов
         if (!contactsCurrentUser.includes(userSendInviteLogin)) {
             contactsCurrentUser.push(userSendInviteLogin)
 
+            // обновляем запись в таблице
             await sqliteRunUsers(`
-                UPDATE users_contact
+                UPDATE users_info
                 SET login_users_in_contact_list = ?
                 WHERE login_user = ?
             `, [JSON.stringify(contactsCurrentUser), userGetInviteLogin])
         }
 
-        // Обновляем запись
-        // await sqliteRunUsers(`
-        //     UPDATE users_contact
-        //     SET login_users_in_invite_list  = ?,
-        //         login_users_in_contact_list = ?
-        //     WHERE login_user = ?
-        // `, [JSON.stringify(invitesCurrentUser), JSON.stringify(contactsCurrentUser), userGetInviteLogin])
-
         // обновляем запись для юзера который отправил запрос и его добавили в контакты
         // получаем запись юзера отправившего запрос на добавление текущего юзера в контакты
-        const objDataUserSendInviteLogin = await sqliteGetUsers(`
-            SELECT * FROM users_contact
+        const objDataUserSendInviteLogin: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE login_user = ?
         `, [userSendInviteLogin])
 
-        const sendUserInviteList = objDataUserSendInviteLogin?.login_users_in_invite_list
         const sendUserContactList = objDataUserSendInviteLogin?.login_users_in_contact_list
 
         // Преобразуем в массив
-        let invitesSendUser: string[] = []
         let contactsSendUser: string[] = []
-
-        if (sendUserInviteList) {
-            try {
-                invitesSendUser = JSON.parse(sendUserInviteList)
-            } catch {
-                invitesSendUser = []
-            }
-        }
 
         if (sendUserContactList) {
             try {
@@ -220,23 +214,17 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
         if (!contactsSendUser.includes(userGetInviteLogin)) {
             contactsSendUser.push(userGetInviteLogin)
 
+            // обновляем запись в таблице
             await sqliteRunUsers(`
-            UPDATE users_contact
+            UPDATE users_info
             SET login_users_in_contact_list = ?
             WHERE login_user = ?
         `, [JSON.stringify(contactsSendUser), userSendInviteLogin])
         }
 
-        // Удаляем логин того кто принял в контакты из инвайт листа
-        if (invitesSendUser.includes(userGetInviteLogin)) {
-            invitesSendUser = invitesSendUser.filter((item: string) => item !== userGetInviteLogin)
-
-            await sqliteRunUsers(`
-            UPDATE users_contact
-            SET login_users_in_invite_list  = ?
-            WHERE login_user = ?
-        `, [JSON.stringify(invitesSendUser), userSendInviteLogin])
-        }
+        // Удаляем логин юзера который заинвайтил нас в контакты из списка заинвайченных
+        // так же удаляем нас из его списка заинвайченных юзеров
+        await declineInvitation(userSendInviteLogin, userGetInviteLogin)
 
         // Обновляем запись с новым списком контактов
         // await sqliteRunUsers(`
@@ -257,8 +245,8 @@ export async function acceptInvitation(userSendInviteLogin: string, userGetInvit
 export async function declineInvitation(userSendInviteLogin: string, userGetInviteLogin: string): Promise<boolean> {
     try {
         // получаем запись юзера который получил заявку на приглашение в контакты
-        const objDataUserGetInviteLogin = await sqliteGetUsers(`
-            SELECT * FROM users_contact
+        const objDataUserGetInviteLogin: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE login_user = ?
         `, [userGetInviteLogin])
 
@@ -274,48 +262,48 @@ export async function declineInvitation(userSendInviteLogin: string, userGetInvi
             }
         }
 
-        // Удаляем логин юзера кто прислал нам приглашение из списка отправивших заявку в контакт
+        // Удаляем логин юзера приславшего инвайт из списка отправивших нам инвайты
         if (invitesCurrentUser.includes(userSendInviteLogin)) {
             invitesCurrentUser = invitesCurrentUser.filter((item: string) => item !== userSendInviteLogin)
 
-            // Обновляем запись
+            // Обновляем запись в таблице
             await sqliteRunUsers(`
-            UPDATE users_contact
+            UPDATE users_info
             SET login_users_in_invite_list  = ?
             WHERE login_user = ?
         `, [JSON.stringify(invitesCurrentUser), userGetInviteLogin])
         }
 
+
         // обновляем запись для юзера который отправил запрос и его не добавили в контакты
-        // получаем запись юзера отправившего запрос на добавление текущего юзера в контакты
-        const objDataUserSendInviteLogin = await sqliteGetUsers(`
-            SELECT * FROM users_contact
+        const objDataUserSendInviteLogin: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE login_user = ?
         `, [userSendInviteLogin])
 
-        const sendUserInviteList = objDataUserSendInviteLogin?.login_users_in_invite_list
+        const sendUserWhomSentInviteList = objDataUserSendInviteLogin?.login_users_whom_i_sent_invite
 
         // Преобразуем в массив
-        let invitesSendUser: string[] = []
+        let sendUserWhomSentInviteListArr: string[] = []
 
-        if (sendUserInviteList) {
+        if (sendUserWhomSentInviteList) {
             try {
-                invitesSendUser = JSON.parse(sendUserInviteList)
+                sendUserWhomSentInviteListArr = JSON.parse(sendUserWhomSentInviteList)
             } catch {
-                invitesSendUser = []
+                sendUserWhomSentInviteListArr = []
             }
         }
 
-        // Удаляем логин того кто принял в контакты из инвайт листа
-        if (invitesSendUser.includes(userGetInviteLogin)) {
-            invitesSendUser = invitesSendUser.filter((item: string) => item !== userGetInviteLogin)
+        // Удаляем наш логин из списка тех кого заинвайтил юзер
+        if (sendUserWhomSentInviteListArr.includes(userGetInviteLogin)) {
+            sendUserWhomSentInviteListArr = sendUserWhomSentInviteListArr.filter((item: string) => item !== userGetInviteLogin)
 
-            // Обновляем запись с новым инвайт списком
+            // Обновляем запись в таблице
             await sqliteRunUsers(`
-            UPDATE users_contact
-            SET login_users_in_invite_list  = ?
+            UPDATE users_info
+            SET login_users_whom_i_sent_invite  = ?
             WHERE login_user = ?
-        `, [JSON.stringify(invitesSendUser), userSendInviteLogin])
+        `, [JSON.stringify(sendUserWhomSentInviteListArr), userSendInviteLogin])
         }
 
         return true
@@ -324,21 +312,19 @@ export async function declineInvitation(userSendInviteLogin: string, userGetInvi
     }
 }
 
-// TODO функция получения всех созданных юзеров
-export async function getAllUsersList(): Promise<{ usersList: Array<{ userName: string, userStatus:string, userContactList: Array<string>, userAvatar: string, userInviteList: Array<string> }>, usersCount: string }> {
+// TODO функция получения массива обьектов всех созданных юзеров
+export async function getAllUsersList(): Promise<UserAll> {
     try {
         // получаем список всех созданных юзеров и их кол-во
-        const allUserList = await sqliteAllUsers(`
+        const allUserList: Array<UserContactObject> = await sqliteAllUsers(`
             SELECT * FROM users_contact
         `)
 
-        const resultUserList = allUserList.map((user: { login_user: string, user_status:string, login_users_in_contact_list: string, login_users_in_invite_list: string, user_avatar?: "" }) => {
+        const resultUserList = allUserList.map((user: UserContactObject) => {
             return {
                 userName: user.login_user,
-                userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
                 userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!",
-                userContactList: user.login_users_in_contact_list,
-                userInviteList: user.login_users_in_invite_list
+                userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png"
             }
         })
 
@@ -348,20 +334,15 @@ export async function getAllUsersList(): Promise<{ usersList: Array<{ userName: 
     }
 }
 
-// TODO функция получения всех юзеров отправивших заявки на добавление в контакты пользователя
-export async function getUserListSendsInviteContact(userId: string) {
+// TODO функция получения массива обьектов всех юзеров отправивших заявки на добавление в контакты пользователя
+export async function getUserListSendsInviteContact(userId: string): Promise<Array<UserContactObjectResponse>> {
     try {
-        const objAuthDataUser = await sqliteGetUsers(`
-            SELECT * FROM users_auth
+        const objAuthDataUser: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
             WHERE id = ?
         `, [userId])
 
-        const objContactDataUser = await sqliteGetUsers(`
-            SELECT * FROM users_contact
-            WHERE login_user = ?
-        `, [objAuthDataUser.login])
-
-        const userInviteList = objContactDataUser?.login_users_in_invite_list
+        const userInviteList = objAuthDataUser?.login_users_in_invite_list
 
         let invitesList: string[] = []
 
@@ -378,40 +359,36 @@ export async function getUserListSendsInviteContact(userId: string) {
 
 
         if (placeholders) {
-            const data = await sqliteAllUsers(`
+            const data: Array<UserContactObject> = await sqliteAllUsers(`
                 SELECT * FROM users_contact
                 WHERE login_user IN (${placeholders})
             `, invitesList)
 
-            return data.length ? data.map((user) => {
+            return data.length ? data.map((user: UserContactObject) => {
                 return {
                     userName: user.login_user,
                     userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
-                    userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!",
-                    userContactList: user.login_users_in_contact_list
+                    userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!"
                 }
             }) : []
         } else {
             return []
         }
 
-    } catch {}
+    } catch {
+        return []
+    }
 }
 
-// TODO функция получения всех контактов пользователя
-export async function getUserListContact(userId: string) {
+// TODO функция получения массива обьектов всех контактов пользователя
+export async function getUserListContact(userId: string): Promise<Array<UserContactObjectResponse>>  {
     try {
         const objAuthDataUser = await sqliteGetUsers(`
-            SELECT * FROM users_auth
+            SELECT * FROM users_info
             WHERE id = ?
         `, [userId])
 
-        const objContactDataUser = await sqliteGetUsers(`
-            SELECT * FROM users_contact
-            WHERE login_user = ?
-        `, [objAuthDataUser.login])
-
-        const userContactList = objContactDataUser?.login_users_in_contact_list
+        const userContactList = objAuthDataUser?.login_users_in_contact_list
 
         let contactList: string[] = []
 
@@ -428,22 +405,69 @@ export async function getUserListContact(userId: string) {
 
 
         if (placeholders) {
-            const data = await sqliteAllUsers(`
+            const data: Array<UserContactObject> = await sqliteAllUsers(`
                 SELECT * FROM users_contact
                 WHERE login_user IN (${placeholders})
             `, contactList)
 
-            return data.length ? data.map((user) => {
+            return data.length ? data.map((user: UserContactObject) => {
                 return {
                     userName: user.login_user,
                     userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
-                    userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!",
-                    userContactList: user.login_users_in_contact_list
+                    userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!"
                 }
             }) : []
         } else {
             return []
         }
 
-    } catch {}
+    } catch {
+        return []
+    }
+}
+
+// TODO функция по получению массива обьектов юзеров кому мы отправили инвайты
+export async function getAllUsersWhomSentInvite(userId: string): Promise<Array<UserContactObjectResponse>> {
+    try {
+        const objAuthDataUser: UserInfoObject = await sqliteGetUsers(`
+            SELECT * FROM users_info
+            WHERE id = ?
+        `, [userId])
+
+        const userInviteList = objAuthDataUser?.login_users_whom_i_sent_invite
+
+        let invitesList: string[] = []
+
+        if (userInviteList) {
+            try {
+                invitesList = JSON.parse(userInviteList)
+            } catch {
+                invitesList = []
+            }
+        }
+
+        // делаем плейсхолдеры для IN
+        const placeholders = getPlaceholder(invitesList)
+
+
+        if (placeholders) {
+            const data: Array<UserContactObject> = await sqliteAllUsers(`
+                SELECT * FROM users_contact
+                WHERE login_user IN (${placeholders})
+            `, invitesList)
+
+            return data.length ? data.map((user: UserContactObject) => {
+                return {
+                    userName: user.login_user,
+                    userAvatar: user.user_avatar ?? "https://blokator-virusov.ru/img/design/noava.png",
+                    userStatus: user.user_status ?? "Всем привет! Я использую AppProChat!"
+                }
+            }) : []
+        } else {
+            return []
+        }
+
+    } catch {
+        return []
+    }
 }

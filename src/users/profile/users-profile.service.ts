@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
-import {editUserAvatar, editUserStatus} from "../../database/db/users/users_profile/user_profile"
+import { editUserAvatar, editUserStatus } from "../../database/db/users/users_profile/user_profile"
 import FormData from 'form-data'
 import sharp from 'sharp'
-import {sqliteGetUsers} from "../../database/db-connection"
+import { sqliteGetUsers } from "../../database/db-connection"
 import { lastValueFrom } from 'rxjs'
+import type { UserInfoObject } from "../../database/db/users/types";
 
 @Injectable()
 export class UsersProfileService {
@@ -14,8 +15,8 @@ export class UsersProfileService {
     async changeUserAvatar(userAvatar: Express.Multer.File, userId: string) {
         try {
             // получаем объект юзера из бд
-            const objDataUser = await sqliteGetUsers(`
-                SELECT * FROM users_auth
+            const objDataUser: UserInfoObject = await sqliteGetUsers(`
+                SELECT * FROM users_info
                 WHERE id = ?
             `, [userId])
 
@@ -90,7 +91,8 @@ export class UsersProfileService {
             const { data } = await lastValueFrom(responseObservable)
 
             const objData = {
-                userLogin: objDataUser.login,
+                userLogin: objDataUser.login_user,
+                userId: userId,
                 urlAvatar: data?.data?.url
             }
 
@@ -99,9 +101,9 @@ export class UsersProfileService {
                 await editUserAvatar(objData)
             }
 
-            return { response: "Аватар обновлен"}
+            return { response: objData.urlAvatar }
         } catch {
-            return { response: "Ошибка обновления аватара"}
+            return { responseError: "Ошибка обновления аватара"}
         }
     }
 
@@ -110,14 +112,15 @@ export class UsersProfileService {
         if (userId && status) {
             try {
                 // получаем объект юзера из бд
-                const objDataUser = await sqliteGetUsers(`
+                const objDataUser: UserInfoObject = await sqliteGetUsers(`
                     SELECT * FROM users_auth
                     WHERE id = ?
                 `, [userId])
 
 
                 const objData = {
-                    userLogin: objDataUser.login,
+                    userId: userId,
+                    userLogin: objDataUser.login_user,
                     status,
                 }
 

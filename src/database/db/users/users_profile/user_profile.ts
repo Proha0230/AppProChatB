@@ -1,7 +1,12 @@
 import { sqliteRunUsers } from "../../../db-connection";
 
 // TODO функция для изменения аватарки пользователя
-export async function editUserAvatar(data: { userLogin: string, urlAvatar: string }) {
+export async function editUserAvatar(data: { userLogin: string, userId:string, urlAvatar: string }) {
+    await sqliteRunUsers(`
+    UPDATE users_info SET user_avatar = ?
+    WHERE id = ?
+    `, [data.urlAvatar, data.userId])
+
     await sqliteRunUsers(`
     UPDATE users_contact SET user_avatar = ?
     WHERE login_user = ?
@@ -9,7 +14,12 @@ export async function editUserAvatar(data: { userLogin: string, urlAvatar: strin
 }
 
 // TODO функция для изменения статуса пользователя
-export async function editUserStatus(data: { userLogin: string, status: string }) {
+export async function editUserStatus(data: { userLogin:string, userId: string, status: string }) {
+    await sqliteRunUsers(`
+    UPDATE users_info SET user_status = ?
+    WHERE id = ?
+    `, [data.status, data.userId])
+
     await sqliteRunUsers(`
     UPDATE users_contact SET user_status = ?
     WHERE login_user = ?

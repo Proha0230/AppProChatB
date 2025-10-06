@@ -1,5 +1,6 @@
 import {Body, Controller, Get, Headers, Post} from "@nestjs/common"
 import { UsersContactService } from "./users-contact.service"
+import type { UserAll } from "../../database/db/users/types"
 
 @Controller('users-contact')
 export class UsersContactController {
@@ -26,13 +27,18 @@ export class UsersContactController {
     }
 
     @Get('/all-users-list')
-    async getAllUsersList(): Promise<{ usersList: Array<{ userName: string, userContactList: Array<string>, userAvatar: string, userInviteList: Array<string> }>, usersCount: string }> {
+    async getAllUsersList(): Promise<UserAll> {
         return await this.usersContactService.getAllUsersList()
     }
 
     @Get('/all-sends-invite')
     async getAllUsersSendsInvite(@Headers() params: { authorization: string }) {
         return await this.usersContactService.getAllUsersSendsInvite(params.authorization)
+    }
+
+    @Get('/all-whom-sent-invite')
+    async getAllUsersWhomSentInvite(@Headers() params: { authorization: string }) {
+        return await this.usersContactService.getAllUsersWhomSentInvite(params.authorization)
     }
 
     @Get('/get-all')

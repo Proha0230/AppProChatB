@@ -6,8 +6,10 @@ import {
     removeUserFromContactList,
     getAllUsersList,
     getUserListSendsInviteContact,
-    getUserListContact
-} from "../../database/db/users/users_contact/users_contact";
+    getUserListContact,
+    getAllUsersWhomSentInvite
+} from "../../database/db/users/users_contact/users_contact"
+import type { UserAll, UserContactObjectResponse } from "../../database/db/users/types"
 
 @Injectable()
 export class UsersContactService {
@@ -57,17 +59,22 @@ export class UsersContactService {
     }
 
     // TODO функция получения всех созданных юзеров
-    async getAllUsersList(): Promise<{ usersList: Array<{ userName: string, userContactList: Array<string>, userAvatar: string, userInviteList: Array<string> }>, usersCount: string }> {
+    async getAllUsersList(): Promise<UserAll> {
         return await getAllUsersList()
     }
 
     // TODO функция получения всех юзеров отправивших заявки на добавление в контакты пользователя
-    async getAllUsersSendsInvite(userId: string): Promise<any> {
+    async getAllUsersSendsInvite(userId: string): Promise<Array<UserContactObjectResponse>> {
         return await getUserListSendsInviteContact(userId)
     }
 
     // TODO функция получения всех контактов пользователя
-    async getAllUsersContact(userId: string): Promise<any> {
+    async getAllUsersContact(userId: string): Promise<Array<UserContactObjectResponse>> {
         return await getUserListContact(userId)
+    }
+
+    // TODO функция получения всех контактов пользователя
+    async getAllUsersWhomSentInvite(userId: string): Promise<Array<UserContactObjectResponse>> {
+        return await getAllUsersWhomSentInvite(userId)
     }
 }

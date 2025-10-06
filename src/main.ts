@@ -1,11 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { createTablesUsers, createTablesChats } from "./database/create-tables";
+import {
+    createTablesChats,
+    createTablesUsersAuth,
+    createTablesUsersInfo,
+    createTablesUsersContact
+} from "./database/create-tables";
 
 async function bootstrap() {
   // инициализируем таблицы в БД
-  await createTablesUsers("users_auth", ['id', 'login', 'password', 'user_avatar']);
-  await createTablesUsers("users_contact", ['login_user', 'login_users_in_contact_list', 'login_users_in_invite_list', 'user_avatar']);
+  await createTablesUsersAuth("users_auth",
+      ['id', 'login', 'password'])
+
+  await createTablesUsersContact("users_contact",
+      ['login_user', 'user_avatar', 'user_status'])
+
+  await createTablesUsersInfo("users_info",
+      ['id', 'login_user', 'user_avatar', 'user_lang', 'user_status', 'user_chats_list',
+          'user_black_list', 'login_users_in_contact_list', 'login_users_in_invite_list', 'login_users_whom_i_sent_invite'])
 
   // для теста
   await createTablesChats("sara_and_proha", ['login_user_one', 'login_user_two', 'login_user_write', 'message_text', 'message_id']);

@@ -7,7 +7,7 @@
 // GetOne
 // GetMany
 
-import { sqliteAllUsers, sqliteGetUsers, sqliteRunUsers } from "./db-connection";
+import type { UserLoginInfo } from "./db/users/types"
 
 // обновить таблицу users_auth поменять поле
 // у id такого то
@@ -62,6 +62,6 @@ import { sqliteAllUsers, sqliteGetUsers, sqliteRunUsers } from "./db-connection"
 // }
 
 // typeGuard - проверка на то, что мы вернули запись о юзере
-export function isUserObject(user: { id: string, login: string, password: string, user_avatar: string }): boolean {
+export function isUserObject(user: UserLoginInfo): boolean {
     return Boolean(user && typeof user === 'object' && user.id && user.login && user.password)
 }

@@ -8,6 +8,8 @@ import { UsersAuthService } from './users/auth/users-auth.service';
 import { ChatsController } from './chats/chats.controller';
 import { ChatsService } from './chats/chats.service';
 import { HttpModule } from "@nestjs/axios";
+import { ChatsCreateController } from "./chats/create/chats-create.controller";
+import { ChatsCreateService } from "./chats/create/chats-create.service";
 
 // Модуль определенный блок кода который выполняет одну задачу
 // контроллер - то что берет урл и слушает его - выполняя определенный функционал
@@ -18,8 +20,8 @@ import { HttpModule } from "@nestjs/axios";
       timeout: 10000,
       maxRedirects: 5,
   }),],
-  controllers: [UsersContactController, UsersAuthController, ChatsController, UsersProfileController],
-  providers: [UsersContactService, UsersAuthService, ChatsService, UsersProfileService],
+  controllers: [UsersContactController, UsersAuthController, ChatsController, UsersProfileController, ChatsCreateController],
+  providers: [UsersContactService, UsersAuthService, ChatsService, UsersProfileService, ChatsCreateService],
 })
 export class AppModule {}
 // это основной модуль и если у нас их будет много, то все остальные модули мы импортируем сюда

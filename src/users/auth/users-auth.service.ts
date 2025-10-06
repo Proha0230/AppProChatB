@@ -1,19 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { createUsers, getUsersLogin, getUserById } from "../../database/db/users/users_auth/users_auth";
+import { Injectable } from '@nestjs/common'
+import { createUsers, getUsersLogin, getUserById } from "../../database/db/users/users_auth/users_auth"
+import type {
+    CreateUserObject,
+    UserInfoObjectResponse,
+    UserLoginInfo
+} from "../../database/db/users/types"
 
 @Injectable()
 export class UsersAuthService {
 
     // TODO функция авторизации пользователя (сверки Login & Password)
-    async getLogin(params: { login: string, password: string }): Promise<{ error?: string, bearerToken?: string }> {
+    async getLogin(params: UserLoginInfo): Promise<{ error?: string, bearerToken?: string }> {
         if (params?.login && params?.password) {
             const userObj = await getUsersLogin(params.login)
 
-            if (userObj?.error) {
+            if ("error" in userObj) {
                 return { error: "Пользователь не найден"}
             }
 
-            if (params?.login && params?.password === userObj?.password) {
+            if (params?.login && "password" in userObj && params?.password === userObj.password) {
                 return { bearerToken: userObj.id }
             } else {
                 return { error: "Пароль неверный"}
@@ -36,11 +41,12 @@ export class UsersAuthService {
     }
 
     // TODO функция создания нового пользователя
-    async createUser(params: { login?: string, password?: string }) : Promise<{ login?: string, password?:string, error?: string }> {
+    async createUser(params: CreateUserObject) : Promise<UserLoginInfo | { error?: string }> {
         if (params?.login && params?.password) {
             const newUserObj = {
                 id: crypto.randomUUID(),
                 user_avatar: null,
+                user_lang: "RU",
                 password: params?.password,
                 login: params?.login.toLowerCase(),
             }
@@ -66,7 +72,7 @@ export class UsersAuthService {
     }
 
     // TODO функция для получения данных по текущему пользователю
-    async getUserInfo(authorization: string): Promise<{ login?: string, userAvatar?: null, userStatus?: string, userInviteList?: Array<string>, userContactList?: Array<string>, error?: string }> {
+    async getUserInfo(authorization: string): Promise<UserInfoObjectResponse | { error: string }> {
         if (authorization) {
             return await getUserById(authorization)
         }
