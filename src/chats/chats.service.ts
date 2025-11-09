@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { getUserById } from "../database/db/users/users_auth/users_auth"
 import { createTablesChats } from "../database/create-tables"
-import {addToUsersNewChat, deleteChatInUserChatsList} from "../database/db/chats"
+import {addToUsersNewChat, deleteChatInUserChatsList, getAllUserChatsList} from "../database/db/chats"
 import type { UserInfoObjectResponse } from "../database/db/users/types"
+import type { userChatItem, responseError } from "../database/db/chats/types"
 
 @Injectable()
 export class ChatsService {
@@ -18,7 +19,8 @@ export class ChatsService {
                 const getTableNameChat = `${userWhoCreateChatObj.login}_and_${loginUserWithWhomCreateChat}`
 
                 // создаем чат если его еще нет между двумя пользователями в БД
-                await createTablesChats(`${getTableNameChat}`, ['login_user_one', 'login_user_two', 'login_user_write', 'message_text', 'message_id'])
+                await createTablesChats(`${getTableNameChat}`, ['user_who_wrote', 'user_who_received', 'message_dispatch_time',
+                    'message_text', 'message_is_text', 'message_is_image', 'message_is_voice', 'message_is_editable', 'message_id'])
 
                 const { response } = await addToUsersNewChat(userWhoCreateChatObj.login, loginUserWithWhomCreateChat, getTableNameChat)
 
@@ -59,5 +61,10 @@ export class ChatsService {
         } catch {
             return { responseError: "Ошибка удаления чата"}
         }
+    }
+
+    //TODO функция по получению списка всех чатов пользователя
+    async getAllUserChats(idUser: string): Promise<Array<userChatItem> | responseError> {
+            return await getAllUserChatsList(idUser)
     }
 }

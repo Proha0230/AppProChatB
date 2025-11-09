@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common'
 import { UsersContactController } from "./users/contact/users-contact.controller"
 import { UsersContactService } from "./users/contact/users-contact.service"
 import { UsersProfileService } from "./users/profile/users-profile.service"
@@ -7,6 +7,7 @@ import { UsersAuthController } from './users/auth/users-auth.controller'
 import { UsersAuthService } from './users/auth/users-auth.service'
 import { ChatsController } from "./chats/chats.controller"
 import { ChatsService } from './chats/chats.service'
+import { WebsocketModule } from "./websocket/websocket.module"
 import { HttpModule } from "@nestjs/axios"
 
 // Модуль определенный блок кода который выполняет одну задачу
@@ -14,10 +15,12 @@ import { HttpModule } from "@nestjs/axios"
 // сервис - то где располагается логика - которую мы вызовем в декораторе контроллера
 
 @Module({
-  imports: [HttpModule.register({
+  imports: [
+      HttpModule.register({
       timeout: 10000,
       maxRedirects: 5,
-  }),],
+      }),
+      WebsocketModule],
   controllers: [UsersContactController, UsersAuthController, ChatsController, UsersProfileController],
   providers: [UsersContactService, UsersAuthService, ChatsService, UsersProfileService],
 })

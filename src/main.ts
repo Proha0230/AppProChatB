@@ -19,8 +19,10 @@ async function bootstrap() {
       ['id', 'login_user', 'user_avatar', 'user_lang', 'user_status', 'user_chats_list',
           'user_black_list', 'login_users_in_contact_list', 'login_users_in_invite_list', 'login_users_whom_i_sent_invite'])
 
-  // для теста
-  await createTablesChats("sara_and_proha", ['login_user_one', 'login_user_two', 'login_user_write', 'message_text', 'message_id']);
+  // для теста создаем таблицу с чатом в БД
+  await createTablesChats("testone_and_testtwo", ['user_who_wrote', 'user_who_received',
+      'message_dispatch_time', 'message_text', 'message_is_text', 'message_is_image', 'message_is_voice',
+      'message_is_editable', 'message_id'])
 
   const app = await NestFactory.create(AppModule)
 

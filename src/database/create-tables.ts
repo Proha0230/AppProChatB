@@ -59,11 +59,15 @@ export async function createTablesChats(nameTable: string, fields: Array<string>
     // CREATE TABLE - просто создать таблицу
     await sqliteRunChats(`
         CREATE TABLE IF NOT EXISTS ${nameTable} (
-            ${fields[0]} TEXT NOT NULL,
-            ${fields[1]} TEXT NOT NULL,
-            ${fields[2]} TEXT NOT NULL,
-            ${fields[3]} TEXT NOT NULL,
-            ${fields[4]} TEXT PRIMARY KEY
+            ${fields[0]} TEXT,
+            ${fields[1]} TEXT,
+            ${fields[2]} TEXT,
+            ${fields[3]} TEXT,
+            ${fields[4]} TEXT,
+            ${fields[5]} TEXT,
+            ${fields[6]} TEXT,
+            ${fields[7]} TEXT,
+            ${fields[8]} TEXT PRIMARY KEY
         )
     `)
 }
