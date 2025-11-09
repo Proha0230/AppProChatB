@@ -1,5 +1,5 @@
 import { sqliteAllUsers, sqliteGetUsers, sqliteRunUsers } from "../../../db-connection";
-import {UserAll, UserContactObject, UserContactObjectResponse, UserInfoObject} from "../types";
+import {UserAll, UserContactObject, UserContactObjectResponse, UserInfoObject} from "../../../../users/types";
 
 //TODO функция получения плейсхолдеров для получения данных из sql
 export function getPlaceholder(array: Array<any>): string {

@@ -7,7 +7,7 @@
 // GetOne
 // GetMany
 
-import type { UserLoginInfo } from "./db/users/types"
+import type { UserLoginInfo } from "../users/types"
 
 // обновить таблицу users_auth поменять поле
 // у id такого то

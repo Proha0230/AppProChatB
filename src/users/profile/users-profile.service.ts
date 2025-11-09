@@ -5,7 +5,7 @@ import FormData from 'form-data'
 import sharp from 'sharp'
 import { sqliteGetUsers } from "../../database/db-connection"
 import { lastValueFrom } from 'rxjs'
-import type { UserInfoObject } from "../../database/db/users/types";
+import type { UserInfoObject } from "../types";
 
 @Injectable()
 export class UsersProfileService {
@@ -108,7 +108,7 @@ export class UsersProfileService {
     }
 
     // TODO функция для изменения статуса пользователя
-    async changeUserStatus(userId: string, status: string) {
+    async changeUserStatus(userId: string, status?: string) {
         if (userId && status) {
             try {
                 // получаем объект юзера из бд
@@ -121,7 +121,7 @@ export class UsersProfileService {
                 const objData = {
                     userId: userId,
                     userLogin: objDataUser.login_user,
-                    status,
+                    status: status ? status : null,
                 }
 
                 await editUserStatus(objData)

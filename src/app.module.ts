@@ -9,6 +9,8 @@ import { ChatsController } from "./chats/chats.controller"
 import { ChatsService } from './chats/chats.service'
 import { WebsocketModule } from "./websocket/websocket.module"
 import { HttpModule } from "@nestjs/axios"
+import { ChatMessageController } from "./chats/message/chats-message.controller"
+import { ChatMessageService } from "./chats/message/chats-message.service"
 
 // Модуль определенный блок кода который выполняет одну задачу
 // контроллер - то что берет урл и слушает его - выполняя определенный функционал
@@ -21,8 +23,8 @@ import { HttpModule } from "@nestjs/axios"
       maxRedirects: 5,
       }),
       WebsocketModule],
-  controllers: [UsersContactController, UsersAuthController, ChatsController, UsersProfileController],
-  providers: [UsersContactService, UsersAuthService, ChatsService, UsersProfileService],
+  controllers: [UsersContactController, UsersAuthController, ChatsController, UsersProfileController, ChatMessageController],
+  providers: [UsersContactService, UsersAuthService, ChatsService, UsersProfileService, ChatMessageService],
 })
 export class AppModule {}
 // это основной модуль и если у нас их будет много, то все остальные модули мы импортируем сюда

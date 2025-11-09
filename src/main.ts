@@ -6,6 +6,7 @@ import {
     createTablesUsersInfo,
     createTablesUsersContact
 } from "./database/create-tables";
+import { BadRequestException, ValidationPipe } from "@nestjs/common"
 
 async function bootstrap() {
   // инициализируем таблицы в БД
@@ -25,6 +26,37 @@ async function bootstrap() {
       'message_is_editable', 'message_id'])
 
   const app = await NestFactory.create(AppModule)
+
+
+// app.useGlobalPipes() подключает пайпы (pipes) — это middleware NestJS, которые перехватывают данные до вызова контроллера.
+// ValidationPipe — один из встроенных пайпов, который:
+// проверяет DTO через class-validator, преобразует типы через class-transformer, может фильтровать поля и выбрасывать ошибки.
+    app.useGlobalPipes(new ValidationPipe({
+        whitelist: true, // TODO Удаляет все лишние поля, которых нет в DTO
+        transform: true, // TODO Включает преобразование типов из plain-object в экземпляры классов DTO.
+        transformOptions: { enableImplicitConversion: true }, // TODO Позволяет class-transformer автоматически конвертировать
+        // TODO например строку в number - если свойство в DTO имеет тип number и мы не указали @Type(() => Number) вручную (забыли)
+        stopAtFirstError: true, // TODO Если true — валидация остановится на первой ошибке. Если false — соберёт все ошибки и вернёт их списком.
+
+        exceptionFactory: (errors) => new BadRequestException({ // TODO Позволяет кастомизировать формат ошибок, возвращаемых при валидации.
+            message: 'Validation failed',
+            errors: errors.map(e => ({
+                field: e.property, // TODO имя поля
+                constraints: e.constraints // TODO описание ошибок с ним
+            })),
+        })
+
+        // TODO вернет ошибку в таком формате
+        // {
+        //     "message": "Validation failed",
+        //     "errors": [
+        //     {
+        //         "field": "text",
+        //         "constraints": { "isNotEmpty": "text не может быть пустым" }
+        //     }
+        // ]
+        // }
+    }))
 
   app.enableCors({
     origin: ['http://localhost:3000'], // или твой фронтовый домен

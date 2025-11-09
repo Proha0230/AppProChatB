@@ -1,7 +1,7 @@
-import type {UserContactObject, UserInfoObject} from "../users/types"
-import {sqliteAllUsers, sqliteGetUsers, sqliteRunChats, sqliteRunUsers} from "../../db-connection"
-import {getPlaceholder} from "../users/users_contact/users_contact"
-import type {responseError, userChatItem} from "./types"
+import type { UserContactObject, UserInfoObject } from "../../../users/types"
+import { sqliteAllChats, sqliteAllUsers, sqliteGetUsers, sqliteRunChats, sqliteRunUsers } from "../../db-connection"
+import { getPlaceholder } from "../users/users_contact/users_contact"
+import { messageInChatList, responseError, resultMessageInChatList, userChatItem } from "../../../chats/types"
 
 //TODO функция для извлечения логинов с кем у нас есть чат
 function extractNames(chatsList: string[], userWhoRequests: string) {
@@ -196,3 +196,54 @@ export async function getAllUserChatsList(idUser: string): Promise<Array<userCha
 }
 
 // TODO функция по получению всех сообщений одного чата с пользователем
+export async function getMessagesWithUserList(idUserWhoRequestingChat: string, loginWithWhomWeRequestChat: string) {
+    try {
+        const objectUserWhoRequests: UserInfoObject = await sqliteGetUsers(`
+            SELECT *
+            FROM users_info
+            WHERE id = ?
+        `, [idUserWhoRequestingChat])
+
+        const userChatsList = objectUserWhoRequests.user_chats_list
+        let userChatListArr: Array<string> = []
+
+        if (userChatsList) {
+            userChatListArr = JSON.parse(userChatsList) // ["chipa_and_proha", "proha_and_sara"]
+        } else {
+            userChatListArr = []
+        }
+
+        const tableNameWithWhomTheUserRequesting = userChatListArr.filter(chatName => chatName.includes(loginWithWhomWeRequestChat))?.[0]
+
+        let chatListWithWhomTheUserRequesting: Array<messageInChatList> = []
+
+        if (tableNameWithWhomTheUserRequesting) {
+            chatListWithWhomTheUserRequesting = await sqliteAllChats(`
+            SELECT * FROM ${tableNameWithWhomTheUserRequesting}
+        `)
+        }
+
+        let resultChatList: Array<resultMessageInChatList> = []
+
+        if (chatListWithWhomTheUserRequesting) {
+            resultChatList = chatListWithWhomTheUserRequesting.map(message => {
+                return {
+                    userWhoWrote: message.user_who_wrote,
+                    userWhoReceived: message.user_who_received,
+                    messageDispatchTime: message.message_dispatch_time,
+                    messageText: message.message_text,
+                    messageIsText: message.message_is_text,
+                    messageIsImage: message.message_is_image,
+                    messageIsVoice: message.message_is_voice,
+                    messageIsEditable: message.message_is_editable,
+                    messageId: message.message_id
+                }
+            })
+        }
+
+        return resultChatList
+
+    } catch {
+        return { responseError: 'Такого чата не существует!' }
+    }
+}

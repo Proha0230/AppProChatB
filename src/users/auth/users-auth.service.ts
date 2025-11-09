@@ -1,83 +1,59 @@
 import { Injectable } from '@nestjs/common'
 import { createUsers, getUsersLogin, getUserById } from "../../database/db/users/users_auth/users_auth"
-import type {
-    CreateUserObject,
+import {
+    CreateUserObject, IUsersAuthSignIn,
     UserInfoObjectResponse,
     UserLoginInfo
-} from "../../database/db/users/types"
+} from "../types"
 
 @Injectable()
 export class UsersAuthService {
 
     // TODO функция авторизации пользователя (сверки Login & Password)
-    async getLogin(params: UserLoginInfo): Promise<{ error?: string, bearerToken?: string }> {
-        if (params?.login && params?.password) {
+    async signIn(params: UserLoginInfo): Promise<IUsersAuthSignIn> {
+        try {
             const userObj = await getUsersLogin(params.login)
 
             if ("error" in userObj) {
-                return { error: "Пользователь не найден"}
+                return { error: "Пользователь не найден" }
             }
 
             if (params?.login && "password" in userObj && params?.password === userObj.password) {
                 return { bearerToken: userObj.id }
             } else {
-                return { error: "Пароль неверный"}
+                return { error: "Пароль неверный" }
             }
+        } catch {
+            return { error: "Ошибка входа, повторите еще раз" }
         }
-
-        if (params?.login && !params?.password) {
-            return { error: "Введите пароль"}
-        }
-
-        if (!params?.login && params?.password) {
-            return { error: "Введите логин"}
-        }
-
-        if (!params?.login && !params?.password) {
-            return { error: "Введите логин и пароль"}
-        }
-
-        return { error: "Ошибка, попробуйте позже"}
     }
 
     // TODO функция создания нового пользователя
-    async createUser(params: CreateUserObject) : Promise<UserLoginInfo | { error?: string }> {
-        if (params?.login && params?.password) {
+    async signUp(data: CreateUserObject) : Promise<UserLoginInfo | { error?: string }> {
+        try {
             const newUserObj = {
                 id: crypto.randomUUID(),
                 user_avatar: null,
                 user_lang: "RU",
-                password: params?.password,
-                login: params?.login.toLowerCase(),
+                password: data?.password,
+                login: data?.login.toLowerCase(),
             }
 
             await createUsers(newUserObj)
 
-            return { login : params.login, password: params.password }
+            return { login: data.login, password: data.password}
+        } catch {
+            return { error: "Ошибка регистрации, повторите еще раз" }
         }
-
-        if (params?.login && !params?.password) {
-            return { error: "Введите пароль"}
-        }
-
-        if (!params?.login && params?.password) {
-            return { error: "Введите логин"}
-        }
-
-        if (!params?.login && !params?.password) {
-            return { error: "Введите логин и пароль"}
-        }
-
-        return { error: "Ошибка регистрации" }
     }
 
     // TODO функция для получения данных по текущему пользователю
     async getUserInfo(authorization: string): Promise<UserInfoObjectResponse | { error: string }> {
-        if (authorization) {
+        try {
             return await getUserById(authorization)
+        } catch {
+            return { error: "Ошибка получения данных пользователя"}
         }
-
-        return { error: "Ошибка авторизации. Отказано в доступе"}
     }
 
     // TODO функция по добавлению ячейки в таблицу БД

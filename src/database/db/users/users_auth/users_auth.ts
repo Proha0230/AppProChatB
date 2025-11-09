@@ -1,6 +1,6 @@
-import { sqliteGetUsers, sqliteRunUsers } from "../../../db-connection";
+import { sqliteGetUsers, sqliteRunUsers } from "../../../db-connection"
 import { isUserObject } from "../../../users-repository"
-import type { CreateUserObject, UserInfoObject, UserInfoObjectResponse, UserLoginInfo } from "../types";
+import type { CreateUserObject, UserInfoObject, UserInfoObjectResponse, UserLoginInfo } from "../../../../users/types"
 
 // TODO функция создания нового пользователя
 export async function createUsers(data: CreateUserObject): Promise<boolean> {
@@ -30,7 +30,7 @@ export async function createUsers(data: CreateUserObject): Promise<boolean> {
 }
 
 // TODO функция авторизации пользователя (сверки Login & Password)
-export async function getUsersLogin(login: string): Promise<UserLoginInfo |{ error?: string }> {
+export async function getUsersLogin(login: string): Promise<UserLoginInfo | { error?: string }> {
     try {
         const data: UserLoginInfo = await sqliteGetUsers(`
             SELECT * FROM users_auth

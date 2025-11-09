@@ -1,48 +1,109 @@
-import {Body, Controller, Get, Headers, Post} from "@nestjs/common"
+import { BadRequestException, Body, Controller, Get, Headers, Post } from "@nestjs/common"
 import { UsersContactService } from "./users-contact.service"
-import type { UserAll } from "../../database/db/users/types"
+import { IUsersContactDeleteContact, IUsersContactSendOrAcceptOrDeclineInvite, UserAll } from "../types"
+import { UsersContactDeleteContactDto, UsersContactSendOrAcceptOrDeclineInviteDto } from "../DTO/contact/usersContact.dto"
 
 @Controller('users-contact')
 export class UsersContactController {
     constructor(private readonly usersContactService: UsersContactService) {}
 
     @Post('/send-invite')
-    async sendInviteUser(@Body() params: { userSendInviteLogin: string, userGetInviteLogin: string }): Promise<{ error?: string, response?: string}> {
-        return await this.usersContactService.sendInviteUser(params.userSendInviteLogin, params.userGetInviteLogin)
+    async sendInviteUser(
+        @Headers() params: { authorization: string },
+        @Body() data: UsersContactSendOrAcceptOrDeclineInviteDto
+    ): Promise<IUsersContactSendOrAcceptOrDeclineInvite> {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
+        return await this.usersContactService.sendInviteUser(data.userSendInviteLogin, data.userGetInviteLogin)
     }
 
     @Post('/accept-invite')
-    async acceptUserInvitation(@Body() params: { userSendInviteLogin: string, userGetInviteLogin: string }): Promise<{ error?: string, response?: string}> {
-        return await this.usersContactService.acceptUserInvitation(params.userSendInviteLogin, params.userGetInviteLogin)
+    async acceptUserInvitation(
+        @Headers() params: { authorization: string },
+        @Body() data: UsersContactSendOrAcceptOrDeclineInviteDto
+    ): Promise<IUsersContactSendOrAcceptOrDeclineInvite> {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
+        return await this.usersContactService.acceptUserInvitation(data.userSendInviteLogin, data.userGetInviteLogin)
     }
 
     @Post('/decline-invite')
-    async declineUserInvitation(@Body() params: { userSendInviteLogin: string, userGetInviteLogin: string }): Promise<{ error?: string, response?: string}> {
-        return await this.usersContactService.declineUserInvitation(params.userSendInviteLogin, params.userGetInviteLogin)
+    async declineUserInvitation(
+        @Headers() params: { authorization: string },
+        @Body() data: UsersContactSendOrAcceptOrDeclineInviteDto
+    ): Promise<IUsersContactSendOrAcceptOrDeclineInvite> {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
+        return await this.usersContactService.declineUserInvitation(data.userSendInviteLogin, data.userGetInviteLogin)
     }
 
     @Post('/delete-contact')
-    async removeUserFromContact(@Body() params: { currentUserLogin: string, deleteUserLogin: string }): Promise<{ error?: string, response?: string}> {
-        return await this.usersContactService.removeUserFromContact(params.currentUserLogin, params.deleteUserLogin)
+    async removeUserFromContact(
+        @Headers() params: { authorization: string },
+        @Body() data: UsersContactDeleteContactDto
+    ): Promise<IUsersContactDeleteContact> {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
+        return await this.usersContactService.removeUserFromContact(data.currentUserLogin, data.deleteUserLogin)
     }
 
     @Get('/all-users-list')
-    async getAllUsersList(): Promise<UserAll> {
+    async getAllUsersList(
+        @Headers() params: { authorization: string }
+    ): Promise<UserAll> {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
         return await this.usersContactService.getAllUsersList()
     }
 
     @Get('/all-sends-invite')
-    async getAllUsersSendsInvite(@Headers() params: { authorization: string }) {
+    async getAllUsersSendsInvite(
+        @Headers() params: { authorization: string }
+    ) {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
         return await this.usersContactService.getAllUsersSendsInvite(params.authorization)
     }
 
     @Get('/all-whom-sent-invite')
-    async getAllUsersWhomSentInvite(@Headers() params: { authorization: string }) {
+    async getAllUsersWhomSentInvite(
+        @Headers() params: { authorization: string }
+    ) {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
         return await this.usersContactService.getAllUsersWhomSentInvite(params.authorization)
     }
 
     @Get('/get-all')
-    async getAllUsersContact(@Headers() params: { authorization: string }) {
+    async getAllUsersContact(
+        @Headers() params: { authorization: string }
+    ) {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
         return await this.usersContactService.getAllUsersContact(params.authorization)
     }
 }

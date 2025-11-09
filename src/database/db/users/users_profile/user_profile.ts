@@ -14,7 +14,7 @@ export async function editUserAvatar(data: { userLogin: string, userId:string, u
 }
 
 // TODO функция для изменения статуса пользователя
-export async function editUserStatus(data: { userLogin:string, userId: string, status: string }) {
+export async function editUserStatus(data: { userLogin:string, userId: string, status: string | null }) {
     await sqliteRunUsers(`
     UPDATE users_info SET user_status = ?
     WHERE id = ?

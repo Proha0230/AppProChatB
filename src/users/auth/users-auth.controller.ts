@@ -1,5 +1,7 @@
-import { Body, Controller, Post, Get, Headers } from '@nestjs/common';
-import { UsersAuthService } from "./users-auth.service";
+import { Body, Controller, Post, Get, Headers, BadRequestException } from '@nestjs/common'
+import { UsersAuthService } from "./users-auth.service"
+import { UsersAuthSignInDto, UsersAuthSignUpDto } from "../DTO/auth/usersAuth.dto"
+import { IUsersAuthGetInfo, IUsersAuthSignIn, IUsersAuthSignUp } from "../types"
 
 @Controller('users-auth')
 export class UsersAuthController {
@@ -7,17 +9,28 @@ export class UsersAuthController {
 
     @Post('/sign-up')
     // декоратор @Body() достает payload ручки для дальнейшего использования
-    createUser(@Body() params: { login: string, password: string }): Promise<{ login?: string, password?:string, error?: string }> {
-        return this.usersAuthService.createUser(params)
+    signUp(
+        @Body() data: UsersAuthSignUpDto
+    ): Promise<IUsersAuthSignUp> {
+        return this.usersAuthService.signUp(data)
     }
 
     @Post('/sign-in')
-    getLogin(@Body() params: { login: string, password: string }): Promise<{ error?: string, baererToken?: string }> {
-        return this.usersAuthService.getLogin(params)
+    signIn(
+        @Body() data: UsersAuthSignInDto
+    ): Promise<IUsersAuthSignIn> {
+        return this.usersAuthService.signIn(data)
     }
 
     @Get('/get-info')
-    getUserInfo(@Headers () params: { authorization: string }): Promise<{ login?: string, userAvatar?: null, userStatus?: string, userInviteList?: Array<string>, userContactList?: Array<string>, error?: string }> {
+    getUserInfo(
+        @Headers() params: { authorization: string }
+    ): Promise<IUsersAuthGetInfo> {
+
+        if (!params.authorization) {
+            throw new BadRequestException('У вас нет прав на выполнение этой операции')
+        }
+
         return this.usersAuthService.getUserInfo(params.authorization)
     }
 

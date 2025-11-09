@@ -47,9 +47,39 @@ export interface UserLoginInfo {
 }
 
 export interface CreateUserObject {
-    login?: string,
-    id?: string,
-    password?: string,
-    user_avatar?: null | string,
+    login: string
+    password: string
+    id?: string
+    user_avatar?: null | string
     user_lang?: string
+}
+
+export interface IUsersAuthSignUp {
+    login?: string
+    password?:string
+    error?: string
+}
+
+export interface IUsersAuthSignIn {
+    error?: string
+    bearerToken?: string
+}
+
+export interface IUsersAuthGetInfo {
+    login?: string
+    userAvatar?: string
+    userStatus?: string
+    userInviteList?: Array<string>
+    userContactList?: Array<string>
+    error?: string
+}
+
+export interface IUsersContactSendOrAcceptOrDeclineInvite {
+    error?: string
+    response?: string
+}
+
+export interface IUsersContactDeleteContact {
+    error?: string
+    response?: string
 }

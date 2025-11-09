@@ -9,13 +9,18 @@ import {
     getUserListContact,
     getAllUsersWhomSentInvite
 } from "../../database/db/users/users_contact/users_contact"
-import type { UserAll, UserContactObjectResponse } from "../../database/db/users/types"
+import type {
+    IUsersContactDeleteContact,
+    IUsersContactSendOrAcceptOrDeclineInvite,
+    UserAll,
+    UserContactObjectResponse
+} from "../types"
 
 @Injectable()
 export class UsersContactService {
 
     // TODO функция по отправке запроса в добавление в контакты юзера
-    async sendInviteUser(userSendInviteLogin: string, userGetInviteLogin: string): Promise<{ error?: string, response?: string}> {
+    async sendInviteUser(userSendInviteLogin: string, userGetInviteLogin: string): Promise<IUsersContactSendOrAcceptOrDeclineInvite> {
         const status = await sendUserInviteInContact(userSendInviteLogin, userGetInviteLogin)
 
         if (status) {
@@ -26,7 +31,7 @@ export class UsersContactService {
     }
 
     // TODO функция принятия запроса в контакты
-    async acceptUserInvitation(userSendInviteLogin: string, userGetInviteLogin: string): Promise<{ error?: string, response?: string}> {
+    async acceptUserInvitation(userSendInviteLogin: string, userGetInviteLogin: string): Promise<IUsersContactSendOrAcceptOrDeclineInvite> {
         const status = await acceptInvitation(userSendInviteLogin, userGetInviteLogin)
 
         if (status) {
@@ -37,7 +42,7 @@ export class UsersContactService {
     }
 
     // TODO функция отклонения запроса в контакты
-    async declineUserInvitation(userSendInviteLogin: string, userGetInviteLogin: string): Promise<{ error?: string, response?: string}> {
+    async declineUserInvitation(userSendInviteLogin: string, userGetInviteLogin: string): Promise<IUsersContactSendOrAcceptOrDeclineInvite> {
         const status = await declineInvitation(userSendInviteLogin, userGetInviteLogin)
 
         if (status) {
@@ -48,7 +53,7 @@ export class UsersContactService {
     }
 
     // TODO функция удаления пользователя из списка контактов
-    async removeUserFromContact(currentUserLogin: string, deleteUserLogin: string): Promise<{ error?: string, response?: string}> {
+    async removeUserFromContact(currentUserLogin: string, deleteUserLogin: string): Promise<IUsersContactDeleteContact> {
         const status = await removeUserFromContactList(currentUserLogin, deleteUserLogin)
 
         if (status) {

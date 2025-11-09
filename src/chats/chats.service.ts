@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { getUserById } from "../database/db/users/users_auth/users_auth"
 import { createTablesChats } from "../database/create-tables"
-import {addToUsersNewChat, deleteChatInUserChatsList, getAllUserChatsList} from "../database/db/chats"
-import type { UserInfoObjectResponse } from "../database/db/users/types"
-import type { userChatItem, responseError } from "../database/db/chats/types"
+import { addToUsersNewChat, deleteChatInUserChatsList, getAllUserChatsList, getMessagesWithUserList } from "../database/db/chats"
+import type { UserInfoObjectResponse } from "../users/types"
+import type { userChatItem, responseError } from "./types"
 
 @Injectable()
 export class ChatsService {
@@ -66,5 +66,10 @@ export class ChatsService {
     //TODO функция по получению списка всех чатов пользователя
     async getAllUserChats(idUser: string): Promise<Array<userChatItem> | responseError> {
             return await getAllUserChatsList(idUser)
+    }
+
+    //TODO функция по получению чата с пользователем
+    async getMessagesWithUser(idUserWhoRequestingChat: string, loginWithWhomWeRequestChat: string) {
+            return await getMessagesWithUserList(idUserWhoRequestingChat, loginWithWhomWeRequestChat)
     }
 }
